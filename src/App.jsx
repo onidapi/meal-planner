@@ -2,21 +2,41 @@ import { useState, useEffect } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import { auth, loginWithGoogle, logout, handleRedirectResult } from "./firebaseAuth";
+import { onAuthStateChanged } from "firebase/auth";
 
 function App() {
   const [recipes, setRecipes] = useState([]);
   const [mealPlan, setMealPlan] = useState({});
   const [shoppingList, setShoppingList] = useState([]);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Aggiungi loading state
 
   const days = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
   const meals = ["pranzo","cena"];
 
-  // Recupera utente dopo redirect
+  // Ascolta lo stato di autenticazione
   useEffect(() => {
-    handleRedirectResult().then(u => {
-      if (u) setUser(u);
+    console.log("🔍 Inizializzazione auth listener...");
+    
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log("👤 User state changed:", currentUser?.email || "nessun utente");
+      setUser(currentUser);
+      setLoading(false);
     });
+
+    // Gestisci anche il redirect result
+    handleRedirectResult().then(u => {
+      if (u) {
+        console.log("✅ Login redirect completato:", u.email);
+        setUser(u);
+      }
+      setLoading(false);
+    }).catch(err => {
+      console.error("❌ Errore redirect:", err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Aggiorna le ricette in tempo reale da Firestore
@@ -56,11 +76,37 @@ function App() {
     setShoppingList(Array.from(list));
   };
 
-  if (!user) {
-    // Pagina login
+  // Mostra loading durante l'inizializzazione
+  if (loading) {
     return (
       <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif" }}>
-        <button onClick={loginWithGoogle} style={{ padding:"10px 20px", fontSize:"18px", borderRadius:"5px", backgroundColor:"#2e7d32", color:"white", border:"none", cursor:"pointer" }}>
+        <p style={{ fontSize: "18px" }}>Caricamento...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // Pagina login
+    console.log("🔐 Mostrando pagina login");
+    return (
+      <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif", gap: "20px" }}>
+        <h1 style={{ fontSize: "32px", margin: 0 }}>Meal Planner</h1>
+        <button 
+          onClick={() => {
+            console.log("🖱️ Click su login button");
+            loginWithGoogle();
+          }} 
+          style={{ 
+            padding:"12px 24px", 
+            fontSize:"18px", 
+            borderRadius:"5px", 
+            backgroundColor:"#2e7d32", 
+            color:"white", 
+            border:"none", 
+            cursor:"pointer",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+          }}
+        >
           Accedi con Google
         </button>
       </div>
@@ -68,6 +114,7 @@ function App() {
   }
 
   // Pagina principale
+  console.log("✅ Mostrando app principale per:", user.email);
   return (
     <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center", fontSize: "36px", marginBottom: "20px" }}>Meal Planner</h1>
@@ -75,6 +122,7 @@ function App() {
 
         {/* Logout */}
         <div style={{ textAlign: "right" }}>
+          <span style={{ marginRight: "15px" }}>Ciao, {user.email}</span>
           <button onClick={() => { logout(); setUser(null); }} style={{ padding:"6px 12px", borderRadius:"4px", backgroundColor:"#a12828", color:"white", border:"none", cursor:"pointer" }}>
             Logout
           </button>
