@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, loginWithGoogle, logout } from "./firebaseAuth";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -37,17 +37,53 @@ function App() {
     return unsubscribe;
   }, []);
 
+  // Carica e ascolta il piano settimanale condiviso
+  useEffect(() => {
+    const mealPlanDoc = doc(db, "shared", "mealPlan");
+    const unsubscribe = onSnapshot(mealPlanDoc, (docSnap) => {
+      if (docSnap.exists()) {
+        setMealPlan(docSnap.data().plan || {});
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // Carica e ascolta la lista della spesa condivisa
+  useEffect(() => {
+    const shoppingListDoc = doc(db, "shared", "shoppingList");
+    const unsubscribe = onSnapshot(shoppingListDoc, (docSnap) => {
+      if (docSnap.exists()) {
+        setShoppingList(docSnap.data().items || []);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   // Aggiungi una nuova ricetta su Firestore
   const addRecipe = async (name, ingredients) => {
     const recipesCollection = collection(db, "recipes");
     await addDoc(recipesCollection, { name, ingredients });
   };
 
+  // Salva il piano settimanale su Firestore
+  const saveMealPlan = async (newPlan) => {
+    const mealPlanDoc = doc(db, "shared", "mealPlan");
+    await setDoc(mealPlanDoc, { plan: newPlan });
+  };
+
+  // Salva la lista della spesa su Firestore
+  const saveShoppingList = async (newList) => {
+    const shoppingListDoc = doc(db, "shared", "shoppingList");
+    await setDoc(shoppingListDoc, { items: newList });
+  };
+
   const handleChange = (day, meal, recipeId) => {
-    setMealPlan(prev => ({
-      ...prev,
-      [day]: { ...prev[day], [meal]: recipeId }
-    }));
+    const newPlan = {
+      ...mealPlan,
+      [day]: { ...mealPlan[day], [meal]: recipeId }
+    };
+    setMealPlan(newPlan);
+    saveMealPlan(newPlan);
   };
 
   const generateShoppingList = () => {
@@ -61,7 +97,14 @@ function App() {
         recipe.ingredients.forEach(i => list.add(i));
       }
     }
-    setShoppingList(Array.from(list));
+    const newList = Array.from(list);
+    setShoppingList(newList);
+    saveShoppingList(newList);
+  };
+
+  const clearShoppingList = () => {
+    setShoppingList([]);
+    saveShoppingList([]);
   };
 
   const handleLogin = async () => {
@@ -123,7 +166,7 @@ function App() {
 
         {/* Logout */}
         <div style={{ textAlign: "right" }}>
-          <span style={{ marginRight: "15px" }}>Ciao, {user.email}</span>
+          <span style={{ marginRight: "15px", fontSize: "14px" }}>👤 {user.email}</span>
           <button onClick={handleLogout} style={{ padding:"6px 12px", borderRadius:"4px", backgroundColor:"#a12828", color:"white", border:"none", cursor:"pointer" }}>
             Logout
           </button>
@@ -181,16 +224,23 @@ function App() {
             Genera lista della spesa
           </button>
 
-          <button onClick={() => setShoppingList([])} style={{ padding: "10px 20px", backgroundColor: "#a12828", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+          <button onClick={clearShoppingList} style={{ padding: "10px 20px", backgroundColor: "#a12828", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
             Cancella lista
           </button>
         </div>
 
         {/* Lista della spesa */}
         {shoppingList.length > 0 && (
-          <ul style={{ backgroundColor: "white", padding: "15px", borderRadius: "6px", maxWidth: "500px", margin: "0 auto", listStyle: "none", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}>
-            {shoppingList.map((item, i) => <li key={i} style={{ padding: "5px 0", borderBottom: "1px solid #eee" }}>{item}</li>)}
-          </ul>
+          <div style={{ backgroundColor: "white", padding: "15px", borderRadius: "6px", maxWidth: "500px", margin: "0 auto", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}>
+            <h3 style={{ marginTop: 0, marginBottom: "15px", textAlign: "center" }}>🛒 Lista della spesa</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {shoppingList.map((item, i) => (
+                <li key={i} style={{ padding: "8px 0", borderBottom: i < shoppingList.length - 1 ? "1px solid #eee" : "none" }}>
+                  • {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
       </div>
