@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, doc, setDoc, getDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, doc, setDoc } from "firebase/firestore";
 import { auth, loginWithGoogle, logout } from "./firebaseAuth";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -10,9 +10,22 @@ function App() {
   const [shoppingList, setShoppingList] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchTerms, setSearchTerms] = useState({});
+  const [showDropdown, setShowDropdown] = useState({});
 
   const days = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
   const meals = ["pranzo","cena"];
+
+  // Chiudi dropdown quando clicchi fuori
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('td')) {
+        setShowDropdown({});
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Ascolta lo stato di autenticazione
   useEffect(() => {
@@ -84,6 +97,26 @@ function App() {
     };
     setMealPlan(newPlan);
     saveMealPlan(newPlan);
+    setShowDropdown({});
+    setSearchTerms(prev => ({ ...prev, [`${day}-${meal}`]: "" }));
+  };
+
+  const getFilteredRecipes = (day, meal) => {
+    const searchTerm = searchTerms[`${day}-${meal}`] || "";
+    if (!searchTerm) return recipes;
+    return recipes.filter(r => 
+      r.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const handleSearchChange = (day, meal, value) => {
+    setSearchTerms(prev => ({ ...prev, [`${day}-${meal}`]: value }));
+    setShowDropdown(prev => ({ ...prev, [`${day}-${meal}`]: true }));
+  };
+
+  const getRecipeName = (recipeId) => {
+    const recipe = recipes.find(r => r.id === recipeId);
+    return recipe ? recipe.name : "";
   };
 
   const generateShoppingList = () => {
@@ -123,7 +156,6 @@ function App() {
     setUser(null);
   };
 
-  // Mostra loading durante l'inizializzazione
   if (loading) {
     return (
       <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif" }}>
@@ -133,8 +165,6 @@ function App() {
   }
 
   if (!user) {
-    // Pagina login
-    console.log("🔐 Mostrando pagina login");
     return (
       <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif", gap: "20px" }}>
         <h1 style={{ fontSize: "32px", margin: 0 }}>Meal Planner</h1>
@@ -157,14 +187,11 @@ function App() {
     );
   }
 
-  // Pagina principale
-  console.log("✅ Mostrando app principale per:", user.email);
   return (
     <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center", fontSize: "36px", marginBottom: "20px" }}>Meal Planner</h1>
       <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
 
-        {/* Logout */}
         <div style={{ textAlign: "right" }}>
           <span style={{ marginRight: "15px", fontSize: "14px" }}>👤 {user.email}</span>
           <button onClick={handleLogout} style={{ padding:"6px 12px", borderRadius:"4px", backgroundColor:"#a12828", color:"white", border:"none", cursor:"pointer" }}>
@@ -172,7 +199,6 @@ function App() {
           </button>
         </div>
 
-        {/* Form aggiungi ricetta */}
         <form style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}
           onSubmit={e => {
             e.preventDefault();
@@ -191,7 +217,6 @@ function App() {
           <button type="submit" style={{ padding: "8px 16px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Aggiungi</button>
         </form>
 
-        {/* Tabella piano settimanale */}
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "center" }}>
             <thead>
@@ -204,21 +229,95 @@ function App() {
               {days.map(day => (
                 <tr key={day}>
                   <td style={{ border: "1px solid #aaa", padding: "8px", fontWeight: "bold" }}>{day}</td>
-                  {meals.map(meal => (
-                    <td key={meal} style={{ border: "1px solid #aaa", padding: "8px" }}>
-                      <select value={mealPlan[day]?.[meal] || ""} onChange={e => handleChange(day, meal, e.target.value)} style={{ padding: "6px", borderRadius: "4px", border: "1px solid #aaa", width: "100%" }}>
-                        <option value="">-- scegli --</option>
-                        {recipes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                      </select>
-                    </td>
-                  ))}
+                  {meals.map(meal => {
+                    const key = `${day}-${meal}`;
+                    const selectedRecipeId = mealPlan[day]?.[meal];
+                    const filteredRecipes = getFilteredRecipes(day, meal);
+                    const isDropdownOpen = showDropdown[key];
+                    
+                    return (
+                      <td key={meal} style={{ border: "1px solid #aaa", padding: "8px", position: "relative" }}>
+                        <div style={{ position: "relative" }}>
+                          <input
+                            type="text"
+                            value={selectedRecipeId ? getRecipeName(selectedRecipeId) : (searchTerms[key] || "")}
+                            onChange={(e) => handleSearchChange(day, meal, e.target.value)}
+                            onFocus={() => setShowDropdown(prev => ({ ...prev, [key]: true }))}
+                            placeholder="Cerca ricetta..."
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px", 
+                              borderRadius: "4px", 
+                              border: "1px solid #aaa",
+                              boxSizing: "border-box"
+                            }}
+                          />
+                          
+                          {selectedRecipeId && (
+                            <button
+                              onClick={() => handleChange(day, meal, "")}
+                              style={{
+                                position: "absolute",
+                                right: "5px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                background: "#a12828",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "50%",
+                                width: "20px",
+                                height: "20px",
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                lineHeight: "1",
+                                padding: 0
+                              }}
+                            >
+                              ×
+                            </button>
+                          )}
+                          
+                          {isDropdownOpen && !selectedRecipeId && filteredRecipes.length > 0 && (
+                            <div style={{
+                              position: "absolute",
+                              top: "100%",
+                              left: 0,
+                              right: 0,
+                              backgroundColor: "white",
+                              border: "1px solid #aaa",
+                              borderRadius: "4px",
+                              maxHeight: "200px",
+                              overflowY: "auto",
+                              zIndex: 1000,
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                            }}>
+                              {filteredRecipes.map(r => (
+                                <div
+                                  key={r.id}
+                                  onClick={() => handleChange(day, meal, r.id)}
+                                  style={{
+                                    padding: "8px 12px",
+                                    cursor: "pointer",
+                                    borderBottom: "1px solid #eee"
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f0f0f0"}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
+                                >
+                                  {r.name}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Bottoni lista della spesa */}
         <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={generateShoppingList} style={{ padding: "10px 20px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
             Genera lista della spesa
@@ -229,7 +328,6 @@ function App() {
           </button>
         </div>
 
-        {/* Lista della spesa */}
         {shoppingList.length > 0 && (
           <div style={{ backgroundColor: "white", padding: "15px", borderRadius: "6px", maxWidth: "500px", margin: "0 auto", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}>
             <h3 style={{ marginTop: 0, marginBottom: "15px", textAlign: "center" }}>🛒 Lista della spesa</h3>
