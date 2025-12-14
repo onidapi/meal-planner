@@ -1,5 +1,5 @@
 // src/firebaseAuth.js
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 
 // Config Firebase
@@ -18,32 +18,25 @@ const app = initializeApp(firebaseConfig, "auth-app");
 export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// Login con POPUP invece di redirect
 export const loginWithGoogle = async () => {
   try {
-    console.log("🔐 Inizio login con Google...");
-    await signInWithRedirect(auth, provider);
+    console.log("🔐 Inizio login con Google (popup)...");
+    const result = await signInWithPopup(auth, provider);
+    console.log("✅ Login riuscito:", result.user.email);
+    return result.user;
   } catch (error) {
     console.error("❌ Errore durante il login:", error);
+    alert("Errore durante il login: " + error.message);
+    throw error;
   }
 };
 
 export const logout = async () => {
   try {
     await signOut(auth);
+    console.log("👋 Logout effettuato");
   } catch (error) {
     console.error("❌ Errore durante il logout:", error);
   }
-};
-
-export const handleRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      console.log("✅ Login riuscito:", result.user.email);
-      return result.user;
-    }
-  } catch (error) {
-    console.error("❌ Errore login redirect:", error);
-  }
-  return null;
 };

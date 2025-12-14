@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, onSnapshot } from "firebase/firestore";
-import { auth, loginWithGoogle, logout, handleRedirectResult } from "./firebaseAuth";
+import { auth, loginWithGoogle, logout } from "./firebaseAuth";
 import { onAuthStateChanged } from "firebase/auth";
 
 function App() {
@@ -9,7 +9,7 @@ function App() {
   const [mealPlan, setMealPlan] = useState({});
   const [shoppingList, setShoppingList] = useState([]);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Aggiungi loading state
+  const [loading, setLoading] = useState(true);
 
   const days = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
   const meals = ["pranzo","cena"];
@@ -21,18 +21,6 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       console.log("👤 User state changed:", currentUser?.email || "nessun utente");
       setUser(currentUser);
-      setLoading(false);
-    });
-
-    // Gestisci anche il redirect result
-    handleRedirectResult().then(u => {
-      if (u) {
-        console.log("✅ Login redirect completato:", u.email);
-        setUser(u);
-      }
-      setLoading(false);
-    }).catch(err => {
-      console.error("❌ Errore redirect:", err);
       setLoading(false);
     });
 
@@ -76,6 +64,22 @@ function App() {
     setShoppingList(Array.from(list));
   };
 
+  const handleLogin = async () => {
+    try {
+      const user = await loginWithGoogle();
+      if (user) {
+        setUser(user);
+      }
+    } catch (error) {
+      console.error("Errore login:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
+  };
+
   // Mostra loading durante l'inizializzazione
   if (loading) {
     return (
@@ -92,10 +96,7 @@ function App() {
       <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif", gap: "20px" }}>
         <h1 style={{ fontSize: "32px", margin: 0 }}>Meal Planner</h1>
         <button 
-          onClick={() => {
-            console.log("🖱️ Click su login button");
-            loginWithGoogle();
-          }} 
+          onClick={handleLogin}
           style={{ 
             padding:"12px 24px", 
             fontSize:"18px", 
@@ -123,7 +124,7 @@ function App() {
         {/* Logout */}
         <div style={{ textAlign: "right" }}>
           <span style={{ marginRight: "15px" }}>Ciao, {user.email}</span>
-          <button onClick={() => { logout(); setUser(null); }} style={{ padding:"6px 12px", borderRadius:"4px", backgroundColor:"#a12828", color:"white", border:"none", cursor:"pointer" }}>
+          <button onClick={handleLogout} style={{ padding:"6px 12px", borderRadius:"4px", backgroundColor:"#a12828", color:"white", border:"none", cursor:"pointer" }}>
             Logout
           </button>
         </div>
