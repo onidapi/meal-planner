@@ -16,7 +16,6 @@ function App() {
   const days = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
   const meals = ["pranzo","cena"];
 
-  // Chiudi dropdown quando clicchi fuori
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('td')) {
@@ -27,20 +26,14 @@ function App() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Ascolta lo stato di autenticazione
   useEffect(() => {
-    console.log("🔍 Inizializzazione auth listener...");
-    
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log("👤 User state changed:", currentUser?.email || "nessun utente");
       setUser(currentUser);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Aggiorna le ricette in tempo reale da Firestore
   useEffect(() => {
     const recipesCollection = collection(db, "recipes");
     const unsubscribe = onSnapshot(recipesCollection, snapshot => {
@@ -50,7 +43,6 @@ function App() {
     return unsubscribe;
   }, []);
 
-  // Carica e ascolta il piano settimanale condiviso
   useEffect(() => {
     const mealPlanDoc = doc(db, "shared", "mealPlan");
     const unsubscribe = onSnapshot(mealPlanDoc, (docSnap) => {
@@ -61,7 +53,6 @@ function App() {
     return unsubscribe;
   }, []);
 
-  // Carica e ascolta la lista della spesa condivisa
   useEffect(() => {
     const shoppingListDoc = doc(db, "shared", "shoppingList");
     const unsubscribe = onSnapshot(shoppingListDoc, (docSnap) => {
@@ -72,19 +63,16 @@ function App() {
     return unsubscribe;
   }, []);
 
-  // Aggiungi una nuova ricetta su Firestore
   const addRecipe = async (name, ingredients) => {
     const recipesCollection = collection(db, "recipes");
     await addDoc(recipesCollection, { name, ingredients });
   };
 
-  // Salva il piano settimanale su Firestore
   const saveMealPlan = async (newPlan) => {
     const mealPlanDoc = doc(db, "shared", "mealPlan");
     await setDoc(mealPlanDoc, { plan: newPlan });
   };
 
-  // Salva la lista della spesa su Firestore
   const saveShoppingList = async (newList) => {
     const shoppingListDoc = doc(db, "shared", "shoppingList");
     await setDoc(shoppingListDoc, { items: newList });
@@ -140,6 +128,15 @@ function App() {
     saveShoppingList([]);
   };
 
+  const copyToBring = () => {
+    const bringFormat = shoppingList.join('\n');
+    navigator.clipboard.writeText(bringFormat).then(() => {
+      alert('✅ Lista copiata negli appunti!');
+    }).catch(err => {
+      alert('Copia questa lista:\n\n' + bringFormat);
+    });
+  };
+
   const handleLogin = async () => {
     try {
       const user = await loginWithGoogle();
@@ -158,77 +155,277 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif" }}>
-        <p style={{ fontSize: "18px" }}>Caricamento...</p>
+      <div style={{ 
+        backgroundColor: "#D1E6DB", 
+        minHeight: "100vh", 
+        display:"flex", 
+        justifyContent:"center", 
+        alignItems:"center", 
+        fontFamily:"'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" 
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "40px", marginBottom: "15px" }}>🍽️</div>
+          <p style={{ fontSize: "18px", color: "#2e7d32" }}>Caricamento...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", fontFamily:"Arial, sans-serif", gap: "20px" }}>
-        <h1 style={{ fontSize: "32px", margin: 0 }}>Meal Planner</h1>
+      <div style={{ 
+        backgroundColor: "#D1E6DB", 
+        minHeight: "100vh", 
+        display:"flex", 
+        flexDirection:"column", 
+        justifyContent:"center", 
+        alignItems:"center", 
+        fontFamily:"'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+        gap: "30px",
+        padding: "20px"
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "80px", marginBottom: "20px" }}>🍽️</div>
+          <h1 style={{ fontSize: "42px", margin: 0, color: "#2e7d32", fontWeight: "700", marginBottom: "10px" }}>
+            Meal Planner
+          </h1>
+          <p style={{ fontSize: "18px", color: "#5a5a5a", margin: 0 }}>
+            Pianifica i tuoi pasti settimanali
+          </p>
+        </div>
         <button 
           onClick={handleLogin}
           style={{ 
-            padding:"12px 24px", 
+            padding:"16px 32px", 
             fontSize:"18px", 
-            borderRadius:"5px", 
+            borderRadius:"12px", 
             backgroundColor:"#2e7d32", 
             color:"white", 
             border:"none", 
             cursor:"pointer",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+            boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
+            fontWeight: "600",
+            transition: "all 0.3s ease",
+            fontFamily:"'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = "translateY(-2px)";
+            e.target.style.boxShadow = "0 6px 16px rgba(46, 125, 50, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0)";
+            e.target.style.boxShadow = "0 4px 12px rgba(46, 125, 50, 0.3)";
           }}
         >
-          Accedi con Google
+          🔐 Accedi con Google
         </button>
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center", fontSize: "36px", marginBottom: "20px" }}>Meal Planner</h1>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
-
-        <div style={{ textAlign: "right" }}>
-          <span style={{ marginRight: "15px", fontSize: "14px" }}>👤 {user.email}</span>
-          <button onClick={handleLogout} style={{ padding:"6px 12px", borderRadius:"4px", backgroundColor:"#a12828", color:"white", border:"none", cursor:"pointer" }}>
-            Logout
-          </button>
+    <div style={{ 
+      backgroundColor: "#D1E6DB", 
+      minHeight: "100vh", 
+      padding: "20px", 
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" 
+    }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+        
+        {/* Header */}
+        <div style={{ 
+          background: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
+          borderRadius: "20px",
+          padding: "30px",
+          marginBottom: "30px",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "20px"
+        }}>
+          <div>
+            <h1 style={{ 
+              fontSize: "36px", 
+              margin: 0, 
+              color: "white",
+              fontWeight: "700",
+              display: "flex",
+              alignItems: "center",
+              gap: "15px"
+            }}>
+              🍽️ Meal Planner
+            </h1>
+            <p style={{ margin: "8px 0 0 0", color: "rgba(255,255,255,0.9)", fontSize: "16px" }}>
+              Piano settimanale condiviso
+            </p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            <span style={{ color: "white", fontSize: "15px", fontWeight: "500" }}>
+              👤 {user.email.split('@')[0]}
+            </span>
+            <button 
+              onClick={handleLogout} 
+              style={{ 
+                padding:"10px 20px", 
+                borderRadius:"10px", 
+                backgroundColor:"rgba(255,255,255,0.2)", 
+                color:"white", 
+                border:"1px solid rgba(255,255,255,0.3)", 
+                cursor:"pointer",
+                fontWeight: "600",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "rgba(255,255,255,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "rgba(255,255,255,0.2)";
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
-        <form style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}
-          onSubmit={e => {
-            e.preventDefault();
-            const name = e.target.elements.name.value.trim();
-            const ingredients = e.target.elements.ingredients.value
-              .split(",")
-              .map(i => i.trim())
-              .filter(i => i);
-            if(!name || ingredients.length===0) return;
-            addRecipe(name, ingredients);
-            e.target.reset();
-          }}
-        >
-          <input type="text" name="name" placeholder="Nome ricetta" required style={{ flex: 1, padding: "8px", borderRadius: "4px", border: "1px solid #aaa" }} />
-          <input type="text" name="ingredients" placeholder="Ingredienti, separati da virgola" required style={{ flex: 1, padding: "8px", borderRadius: "4px", border: "1px solid #aaa" }} />
-          <button type="submit" style={{ padding: "8px 16px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Aggiungi</button>
-        </form>
+        {/* Form aggiungi ricetta - Card style */}
+        <div style={{ 
+          backgroundColor: "white", 
+          borderRadius: "16px", 
+          padding: "25px", 
+          marginBottom: "30px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)"
+        }}>
+          <h2 style={{ margin: "0 0 20px 0", fontSize: "22px", color: "#2e7d32", fontWeight: "600" }}>
+            ➕ Aggiungi nuova ricetta
+          </h2>
+          <form style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
+            onSubmit={e => {
+              e.preventDefault();
+              const name = e.target.elements.name.value.trim();
+              const ingredients = e.target.elements.ingredients.value
+                .split(",")
+                .map(i => i.trim())
+                .filter(i => i);
+              if(!name) return;
+              addRecipe(name, ingredients.length > 0 ? ingredients : []);
+              e.target.reset();
+            }}
+          >
+            <input 
+              type="text" 
+              name="name" 
+              placeholder="Nome ricetta (es: Pasta al pomodoro)" 
+              required 
+              style={{ 
+                flex: 1, 
+                minWidth: "250px",
+                padding: "12px 16px", 
+                borderRadius: "10px", 
+                border: "2px solid #e0e0e0",
+                fontSize: "15px",
+                transition: "border 0.3s ease"
+              }} 
+              onFocus={(e) => e.target.style.border = "2px solid #2e7d32"}
+              onBlur={(e) => e.target.style.border = "2px solid #e0e0e0"}
+            />
+            <input 
+              type="text" 
+              name="ingredients" 
+              placeholder="Ingredienti (opzionale, es: pomodori, pasta, basilico)" 
+              style={{ 
+                flex: 1, 
+                minWidth: "250px",
+                padding: "12px 16px", 
+                borderRadius: "10px", 
+                border: "2px solid #e0e0e0",
+                fontSize: "15px",
+                transition: "border 0.3s ease"
+              }} 
+              onFocus={(e) => e.target.style.border = "2px solid #2e7d32"}
+              onBlur={(e) => e.target.style.border = "2px solid #e0e0e0"}
+            />
+            <button 
+              type="submit" 
+              style={{ 
+                padding: "12px 28px", 
+                backgroundColor: "#2e7d32", 
+                color: "white", 
+                border: "none", 
+                borderRadius: "10px", 
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "15px",
+                boxShadow: "0 2px 8px rgba(46, 125, 50, 0.3)",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.backgroundColor = "#388e3c";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.backgroundColor = "#2e7d32";
+              }}
+            >
+              Aggiungi
+            </button>
+          </form>
+        </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "center" }}>
+        {/* Tabella piano settimanale - Card style */}
+        <div style={{ 
+          backgroundColor: "white", 
+          borderRadius: "16px", 
+          padding: "25px", 
+          marginBottom: "30px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          overflowX: "auto"
+        }}>
+          <h2 style={{ margin: "0 0 20px 0", fontSize: "22px", color: "#2e7d32", fontWeight: "600" }}>
+            📅 Piano settimanale
+          </h2>
+          <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "center" }}>
             <thead>
               <tr>
-                <th style={{ border: "1px solid #aaa", padding: "8px", backgroundColor: "#a5d6a7" }}>Giorno</th>
-                {meals.map(meal => <th key={meal} style={{ border: "1px solid #aaa", padding: "8px", backgroundColor: "#a5d6a7" }}>{meal}</th>)}
+                <th style={{ 
+                  padding: "15px", 
+                  backgroundColor: "#f1f8f4", 
+                  fontWeight: "600",
+                  color: "#2e7d32",
+                  borderTopLeftRadius: "10px",
+                  fontSize: "15px"
+                }}>
+                  Giorno
+                </th>
+                {meals.map((meal, idx) => (
+                  <th key={meal} style={{ 
+                    padding: "15px", 
+                    backgroundColor: "#f1f8f4", 
+                    fontWeight: "600",
+                    color: "#2e7d32",
+                    borderTopRightRadius: idx === meals.length - 1 ? "10px" : "0",
+                    fontSize: "15px",
+                    textTransform: "capitalize"
+                  }}>
+                    {meal === "pranzo" ? "🍝 Pranzo" : "🌙 Cena"}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {days.map(day => (
+              {days.map((day, dayIdx) => (
                 <tr key={day}>
-                  <td style={{ border: "1px solid #aaa", padding: "8px", fontWeight: "bold" }}>{day}</td>
+                  <td style={{ 
+                    padding: "12px", 
+                    fontWeight: "600", 
+                    backgroundColor: "#fafafa",
+                    color: "#424242",
+                    borderLeft: "3px solid #2e7d32"
+                  }}>
+                    {day}
+                  </td>
                   {meals.map(meal => {
                     const key = `${day}-${meal}`;
                     const selectedRecipeId = mealPlan[day]?.[meal];
@@ -236,7 +433,12 @@ function App() {
                     const isDropdownOpen = showDropdown[key];
                     
                     return (
-                      <td key={meal} style={{ border: "1px solid #aaa", padding: "8px", position: "relative" }}>
+                      <td key={meal} style={{ 
+                        padding: "12px", 
+                        position: "relative",
+                        backgroundColor: "white",
+                        borderBottom: dayIdx === days.length - 1 ? "none" : "1px solid #f0f0f0"
+                      }}>
                         <div style={{ position: "relative" }}>
                           <input
                             type="text"
@@ -246,10 +448,18 @@ function App() {
                             placeholder="Cerca ricetta..."
                             style={{ 
                               width: "100%", 
-                              padding: "6px", 
-                              borderRadius: "4px", 
-                              border: "1px solid #aaa",
-                              boxSizing: "border-box"
+                              padding: "10px 12px", 
+                              borderRadius: "8px", 
+                              border: "2px solid #e8f5e9",
+                              boxSizing: "border-box",
+                              fontSize: "14px",
+                              transition: "all 0.3s ease"
+                            }}
+                            onMouseEnter={(e) => e.target.style.borderColor = "#c8e6c9"}
+                            onMouseLeave={(e) => {
+                              if (document.activeElement !== e.target) {
+                                e.target.style.borderColor = "#e8f5e9";
+                              }
                             }}
                           />
                           
@@ -258,19 +468,29 @@ function App() {
                               onClick={() => handleChange(day, meal, "")}
                               style={{
                                 position: "absolute",
-                                right: "5px",
+                                right: "8px",
                                 top: "50%",
                                 transform: "translateY(-50%)",
-                                background: "#a12828",
+                                background: "#ef5350",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "50%",
-                                width: "20px",
-                                height: "20px",
+                                width: "22px",
+                                height: "22px",
                                 cursor: "pointer",
-                                fontSize: "12px",
+                                fontSize: "14px",
                                 lineHeight: "1",
-                                padding: 0
+                                padding: 0,
+                                fontWeight: "bold",
+                                transition: "all 0.2s ease"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = "#d32f2f";
+                                e.target.style.transform = "translateY(-50%) scale(1.1)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = "#ef5350";
+                                e.target.style.transform = "translateY(-50%) scale(1)";
                               }}
                             >
                               ×
@@ -280,27 +500,29 @@ function App() {
                           {isDropdownOpen && !selectedRecipeId && filteredRecipes.length > 0 && (
                             <div style={{
                               position: "absolute",
-                              top: "100%",
+                              top: "calc(100% + 5px)",
                               left: 0,
                               right: 0,
                               backgroundColor: "white",
-                              border: "1px solid #aaa",
-                              borderRadius: "4px",
-                              maxHeight: "200px",
+                              border: "2px solid #e8f5e9",
+                              borderRadius: "10px",
+                              maxHeight: "250px",
                               overflowY: "auto",
                               zIndex: 1000,
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                              boxShadow: "0 6px 20px rgba(0,0,0,0.15)"
                             }}>
                               {filteredRecipes.map(r => (
                                 <div
                                   key={r.id}
                                   onClick={() => handleChange(day, meal, r.id)}
                                   style={{
-                                    padding: "8px 12px",
+                                    padding: "12px 16px",
                                     cursor: "pointer",
-                                    borderBottom: "1px solid #eee"
+                                    borderBottom: "1px solid #f5f5f5",
+                                    fontSize: "14px",
+                                    transition: "background-color 0.2s ease"
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f0f0f0"}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f1f8f4"}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
                                 >
                                   {r.name}
@@ -318,26 +540,140 @@ function App() {
           </table>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={generateShoppingList} style={{ padding: "10px 20px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-            Genera lista della spesa
+        {/* Bottoni lista della spesa */}
+        <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap", marginBottom: "30px" }}>
+          <button 
+            onClick={generateShoppingList} 
+            style={{ 
+              padding: "14px 28px", 
+              backgroundColor: "#2e7d32", 
+              color: "white", 
+              border: "none", 
+              borderRadius: "12px", 
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "16px",
+              boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
+              transition: "all 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-2px)";
+              e.target.style.backgroundColor = "#388e3c";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.backgroundColor = "#2e7d32";
+            }}
+          >
+            🛒 Genera lista della spesa
           </button>
 
-          <button onClick={clearShoppingList} style={{ padding: "10px 20px", backgroundColor: "#a12828", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-            Cancella lista
+          {shoppingList.length > 0 && (
+            <button 
+              onClick={copyToBring} 
+              style={{ 
+                padding: "14px 28px", 
+                backgroundColor: "#1976d2", 
+                color: "white", 
+                border: "none", 
+                borderRadius: "12px", 
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "16px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.backgroundColor = "#1565c0";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.backgroundColor = "#1976d2";
+              }}
+            >
+              📋 Copia lista
+            </button>
+          )}
+
+          <button 
+            onClick={clearShoppingList} 
+            style={{ 
+              padding: "14px 28px", 
+              backgroundColor: "#ef5350", 
+              color: "white", 
+              border: "none", 
+              borderRadius: "12px", 
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "16px",
+              boxShadow: "0 4px 12px rgba(239, 83, 80, 0.3)",
+              transition: "all 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-2px)";
+              e.target.style.backgroundColor = "#d32f2f";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.backgroundColor = "#ef5350";
+            }}
+          >
+            🗑️ Cancella lista
           </button>
         </div>
 
+        {/* Lista della spesa - Card style migliorata */}
         {shoppingList.length > 0 && (
-          <div style={{ backgroundColor: "white", padding: "15px", borderRadius: "6px", maxWidth: "500px", margin: "0 auto", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}>
-            <h3 style={{ marginTop: 0, marginBottom: "15px", textAlign: "center" }}>🛒 Lista della spesa</h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          <div style={{ 
+            backgroundColor: "white", 
+            padding: "30px", 
+            borderRadius: "16px", 
+            maxWidth: "600px", 
+            margin: "0 auto", 
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+          }}>
+            <h3 style={{ 
+              marginTop: 0, 
+              marginBottom: "25px", 
+              textAlign: "center",
+              fontSize: "24px",
+              color: "#2e7d32",
+              fontWeight: "700"
+            }}>
+              🛒 Lista della spesa
+            </h3>
+            <div style={{ 
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: "12px"
+            }}>
               {shoppingList.map((item, i) => (
-                <li key={i} style={{ padding: "8px 0", borderBottom: i < shoppingList.length - 1 ? "1px solid #eee" : "none" }}>
+                <div
+                  key={i}
+                  style={{ 
+                    padding: "12px 16px",
+                    backgroundColor: "#f1f8f4",
+                    borderRadius: "10px",
+                    fontSize: "15px",
+                    color: "#2e7d32",
+                    fontWeight: "500",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#e8f5e9";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f1f8f4";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
                   • {item}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
