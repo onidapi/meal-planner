@@ -1,13 +1,16 @@
-// src/firebaseAuth.js
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { app } from "./firebase"; // importa l'app da firebase.js
 
-export const auth = getAuth(app);
-
+export const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-// Login con Google
-export const loginWithGoogle = () => signInWithPopup(auth, provider);
+export const loginWithGoogle = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    console.error("Errore login:", error);
+  }
+};
 
-// Logout
-export const logout = () => signOut(auth);
+export const logout = async () => {
+  await signOut(auth);
+};
