@@ -1,6 +1,6 @@
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from "firebase/auth";
 
-export const auth = getAuth();
+export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 // Login con redirect
