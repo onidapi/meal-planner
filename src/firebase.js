@@ -1,19 +1,14 @@
-// Importa solo quello che serve
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// La tua configurazione Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBcICNy1K_3cC0KXqdMv1L3c4ual4qArM0",
-  authDomain: "mealplanner-36e6c.firebaseapp.com",
-  projectId: "mealplanner-36e6c",
-  storageBucket: "mealplanner-36e6c.firebasestorage.app",
-  messagingSenderId: "358262517866",
-  appId: "1:358262517866:web:aa717cd1f3a33c09499a13"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Inizializza Firebase
 const app = initializeApp(firebaseConfig);
-
-// Esporta il database Firestore
 export const db = getFirestore(app);
