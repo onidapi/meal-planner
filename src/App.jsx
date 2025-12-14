@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot } from "firebase/firestore";
+import { auth, loginWithGoogle, logout } from "./firebaseAuth";
+import { collection, addDoc, onSnapshot, doc, setDoc } from "firebase/firestore";
 
 function App() {
+  const [user, setUser] = useState(null);
   const [recipes, setRecipes] = useState([]);
   const [mealPlan, setMealPlan] = useState({});
   const [shoppingList, setShoppingList] = useState([]);
@@ -10,31 +12,61 @@ function App() {
   const days = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
   const meals = ["pranzo","cena"];
 
-  // Aggiorna le ricette in tempo reale da Firestore
+  // Controllo stato utente
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Aggiorna le ricette in tempo reale da Firestore (globali)
   useEffect(() => {
     const recipesCollection = collection(db, "recipes");
     const unsubscribe = onSnapshot(recipesCollection, snapshot => {
       const recs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRecipes(recs);
     });
-    return unsubscribe; // pulisce l'ascoltatore quando il componente si smonta
+    return unsubscribe;
   }, []);
 
-  // Aggiungi una nuova ricetta su Firestore
+  // Documento piano condiviso
+  const mealPlanDocRef = doc(db, "sharedMealPlans", "default");
+
+  // Carica piano condiviso in tempo reale
+  useEffect(() => {
+    const unsubscribe = onSnapshot(mealPlanDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setMealPlan(docSnap.data());
+      } else {
+        setMealPlan({});
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // Salva piano condiviso
+  const saveMealPlan = async (newPlan) => {
+    await setDoc(mealPlanDocRef, newPlan);
+  };
+
+  // Aggiungi una nuova ricetta globale
   const addRecipe = async (name, ingredients) => {
     const recipesCollection = collection(db, "recipes");
     await addDoc(recipesCollection, { name, ingredients });
   };
 
-  // Aggiorna il piano settimanale
+  // Aggiorna il piano settimanale condiviso
   const handleChange = (day, meal, recipeId) => {
-    setMealPlan(prev => ({
-      ...prev,
-      [day]: { ...prev[day], [meal]: recipeId }
-    }));
+    const newPlan = {
+      ...mealPlan,
+      [day]: { ...mealPlan[day], [meal]: recipeId }
+    };
+    setMealPlan(newPlan);
+    saveMealPlan(newPlan);
   };
 
-  // Genera la lista della spesa
+  // Genera lista della spesa personale dal piano
   const generateShoppingList = () => {
     const list = new Set();
     for (const day of days) {
@@ -49,10 +81,26 @@ function App() {
     setShoppingList(Array.from(list));
   };
 
+  if (!user) {
+    return (
+      <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <button onClick={loginWithGoogle} style={{ padding: "10px 20px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "18px" }}>
+          Login con Google
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center", fontSize: "36px", marginBottom: "20px" }}>Meal Planner</h1>
       <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+        {/* Logout */}
+        <div style={{ textAlign: "right", marginBottom: "10px" }}>
+          <span style={{ marginRight: "10px" }}>Benvenuto, {user.displayName}</span>
+          <button onClick={logout} style={{ padding: "6px 12px", backgroundColor: "#a12828", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Logout</button>
+        </div>
 
         {/* Form aggiungi ricetta */}
         <form style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}
