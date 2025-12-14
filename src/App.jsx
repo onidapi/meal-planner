@@ -227,7 +227,7 @@ function App() {
     <div style={{ 
       backgroundColor: "#D1E6DB", 
       minHeight: "100vh", 
-      padding: "20px", 
+      padding: "15px", 
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" 
     }}>
       <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
@@ -235,46 +235,48 @@ function App() {
         {/* Header */}
         <div style={{ 
           background: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
-          borderRadius: "20px",
-          padding: "30px",
-          marginBottom: "30px",
+          borderRadius: "16px",
+          padding: "20px",
+          marginBottom: "20px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "20px"
+          gap: "15px"
         }}>
           <div>
             <h1 style={{ 
-              fontSize: "36px", 
+              fontSize: "clamp(24px, 5vw, 36px)", 
               margin: 0, 
               color: "white",
               fontWeight: "700",
               display: "flex",
               alignItems: "center",
-              gap: "15px"
+              gap: "10px",
+              flexWrap: "wrap"
             }}>
               🍽️ Meal Planner
             </h1>
-            <p style={{ margin: "8px 0 0 0", color: "rgba(255,255,255,0.9)", fontSize: "16px" }}>
+            <p style={{ margin: "8px 0 0 0", color: "rgba(255,255,255,0.9)", fontSize: "clamp(13px, 3vw, 16px)" }}>
               Piano settimanale condiviso
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-            <span style={{ color: "white", fontSize: "15px", fontWeight: "500" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <span style={{ color: "white", fontSize: "clamp(13px, 3vw, 15px)", fontWeight: "500" }}>
               👤 {user.email.split('@')[0]}
             </span>
             <button 
               onClick={handleLogout} 
               style={{ 
-                padding:"10px 20px", 
+                padding:"8px 16px", 
                 borderRadius:"10px", 
                 backgroundColor:"rgba(255,255,255,0.2)", 
                 color:"white", 
                 border:"1px solid rgba(255,255,255,0.3)", 
                 cursor:"pointer",
                 fontWeight: "600",
+                fontSize: "14px",
                 transition: "all 0.3s ease"
               }}
               onMouseEnter={(e) => {
@@ -293,14 +295,14 @@ function App() {
         <div style={{ 
           backgroundColor: "white", 
           borderRadius: "16px", 
-          padding: "25px", 
-          marginBottom: "30px",
+          padding: "20px", 
+          marginBottom: "20px",
           boxShadow: "0 2px 12px rgba(0,0,0,0.08)"
         }}>
-          <h2 style={{ margin: "0 0 20px 0", fontSize: "22px", color: "#2e7d32", fontWeight: "600" }}>
+          <h2 style={{ margin: "0 0 15px 0", fontSize: "clamp(18px, 4vw, 22px)", color: "#2e7d32", fontWeight: "600" }}>
             ➕ Aggiungi nuova ricetta
           </h2>
-          <form style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
+          <form style={{ display: "flex", flexDirection: "column", gap: "12px" }}
             onSubmit={e => {
               e.preventDefault();
               const name = e.target.elements.name.value.trim();
@@ -316,15 +318,15 @@ function App() {
             <input 
               type="text" 
               name="name" 
-              placeholder="Nome ricetta (es: Pasta al pomodoro)" 
+              placeholder="Nome ricetta" 
               required 
               style={{ 
-                flex: 1, 
-                minWidth: "250px",
+                width: "100%",
                 padding: "12px 16px", 
                 borderRadius: "10px", 
                 border: "2px solid #e0e0e0",
                 fontSize: "15px",
+                boxSizing: "border-box",
                 transition: "border 0.3s ease"
               }} 
               onFocus={(e) => e.target.style.border = "2px solid #2e7d32"}
@@ -333,14 +335,14 @@ function App() {
             <input 
               type="text" 
               name="ingredients" 
-              placeholder="Ingredienti (opzionale, es: pomodori, pasta, basilico)" 
+              placeholder="Ingredienti (opzionale)" 
               style={{ 
-                flex: 1, 
-                minWidth: "250px",
+                width: "100%",
                 padding: "12px 16px", 
                 borderRadius: "10px", 
                 border: "2px solid #e0e0e0",
                 fontSize: "15px",
+                boxSizing: "border-box",
                 transition: "border 0.3s ease"
               }} 
               onFocus={(e) => e.target.style.border = "2px solid #2e7d32"}
@@ -349,6 +351,7 @@ function App() {
             <button 
               type="submit" 
               style={{ 
+                width: "100%",
                 padding: "12px 28px", 
                 backgroundColor: "#2e7d32", 
                 color: "white", 
@@ -361,11 +364,9 @@ function App() {
                 transition: "all 0.3s ease"
               }}
               onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-2px)";
                 e.target.style.backgroundColor = "#388e3c";
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
                 e.target.style.backgroundColor = "#2e7d32";
               }}
             >
@@ -378,38 +379,43 @@ function App() {
         <div style={{ 
           backgroundColor: "white", 
           borderRadius: "16px", 
-          padding: "25px", 
-          marginBottom: "30px",
+          padding: "15px", 
+          marginBottom: "20px",
           boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
           overflowX: "auto"
         }}>
-          <h2 style={{ margin: "0 0 20px 0", fontSize: "22px", color: "#2e7d32", fontWeight: "600" }}>
+          <h2 style={{ margin: "0 0 15px 0", fontSize: "clamp(18px, 4vw, 22px)", color: "#2e7d32", fontWeight: "600" }}>
             📅 Piano settimanale
           </h2>
-          <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "center" }}>
+          <table style={{ width: "100%", minWidth: "600px", borderCollapse: "separate", borderSpacing: 0, textAlign: "center" }}>
             <thead>
               <tr>
                 <th style={{ 
-                  padding: "15px", 
+                  padding: "12px 8px", 
                   backgroundColor: "#f1f8f4", 
                   fontWeight: "600",
                   color: "#2e7d32",
                   borderTopLeftRadius: "10px",
-                  fontSize: "15px"
+                  fontSize: "clamp(13px, 3vw, 15px)"
                 }}>
                   Giorno
                 </th>
                 {meals.map((meal, idx) => (
                   <th key={meal} style={{ 
-                    padding: "15px", 
+                    padding: "12px 8px", 
                     backgroundColor: "#f1f8f4", 
                     fontWeight: "600",
                     color: "#2e7d32",
                     borderTopRightRadius: idx === meals.length - 1 ? "10px" : "0",
-                    fontSize: "15px",
+                    fontSize: "clamp(13px, 3vw, 15px)",
                     textTransform: "capitalize"
                   }}>
-                    {meal === "pranzo" ? "🍝 Pranzo" : "🌙 Cena"}
+                    <span style={{ display: "inline-block" }}>
+                      {meal === "pranzo" ? "🍝" : "🌙"}
+                    </span>
+                    <span style={{ display: "inline-block", marginLeft: "4px" }}>
+                      {meal}
+                    </span>
                   </th>
                 ))}
               </tr>
@@ -418,11 +424,12 @@ function App() {
               {days.map((day, dayIdx) => (
                 <tr key={day}>
                   <td style={{ 
-                    padding: "12px", 
+                    padding: "10px 8px", 
                     fontWeight: "600", 
                     backgroundColor: "#fafafa",
                     color: "#424242",
-                    borderLeft: "3px solid #2e7d32"
+                    borderLeft: "3px solid #2e7d32",
+                    fontSize: "clamp(12px, 3vw, 14px)"
                   }}>
                     {day}
                   </td>
@@ -434,7 +441,7 @@ function App() {
                     
                     return (
                       <td key={meal} style={{ 
-                        padding: "12px", 
+                        padding: "10px 8px", 
                         position: "relative",
                         backgroundColor: "white",
                         borderBottom: dayIdx === days.length - 1 ? "none" : "1px solid #f0f0f0"
@@ -445,14 +452,14 @@ function App() {
                             value={selectedRecipeId ? getRecipeName(selectedRecipeId) : (searchTerms[key] || "")}
                             onChange={(e) => handleSearchChange(day, meal, e.target.value)}
                             onFocus={() => setShowDropdown(prev => ({ ...prev, [key]: true }))}
-                            placeholder="Cerca ricetta..."
+                            placeholder="Cerca..."
                             style={{ 
                               width: "100%", 
-                              padding: "10px 12px", 
+                              padding: "8px 10px", 
                               borderRadius: "8px", 
                               border: "2px solid #e8f5e9",
                               boxSizing: "border-box",
-                              fontSize: "14px",
+                              fontSize: "clamp(12px, 3vw, 14px)",
                               transition: "all 0.3s ease"
                             }}
                             onMouseEnter={(e) => e.target.style.borderColor = "#c8e6c9"}
@@ -541,27 +548,26 @@ function App() {
         </div>
 
         {/* Bottoni lista della spesa */}
-        <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap", marginBottom: "30px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
           <button 
             onClick={generateShoppingList} 
             style={{ 
-              padding: "14px 28px", 
+              width: "100%",
+              padding: "14px 20px", 
               backgroundColor: "#2e7d32", 
               color: "white", 
               border: "none", 
               borderRadius: "12px", 
               cursor: "pointer",
               fontWeight: "600",
-              fontSize: "16px",
+              fontSize: "clamp(14px, 3.5vw, 16px)",
               boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
               transition: "all 0.3s ease"
             }}
             onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-2px)";
               e.target.style.backgroundColor = "#388e3c";
             }}
             onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0)";
               e.target.style.backgroundColor = "#2e7d32";
             }}
           >
@@ -569,75 +575,74 @@ function App() {
           </button>
 
           {shoppingList.length > 0 && (
-            <button 
-              onClick={copyToBring} 
-              style={{ 
-                padding: "14px 28px", 
-                backgroundColor: "#1976d2", 
-                color: "white", 
-                border: "none", 
-                borderRadius: "12px", 
-                cursor: "pointer",
-                fontWeight: "600",
-                fontSize: "16px",
-                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
-                transition: "all 0.3s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-2px)";
-                e.target.style.backgroundColor = "#1565c0";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.backgroundColor = "#1976d2";
-              }}
-            >
-              📋 Copia lista
-            </button>
-          )}
+            <>
+              <button 
+                onClick={copyToBring} 
+                style={{ 
+                  width: "100%",
+                  padding: "14px 20px", 
+                  backgroundColor: "#1976d2", 
+                  color: "white", 
+                  border: "none", 
+                  borderRadius: "12px", 
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "clamp(14px, 3.5vw, 16px)",
+                  boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#1565c0";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#1976d2";
+                }}
+              >
+                📋 Copia lista
+              </button>
 
-          <button 
-            onClick={clearShoppingList} 
-            style={{ 
-              padding: "14px 28px", 
-              backgroundColor: "#ef5350", 
-              color: "white", 
-              border: "none", 
-              borderRadius: "12px", 
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "16px",
-              boxShadow: "0 4px 12px rgba(239, 83, 80, 0.3)",
-              transition: "all 0.3s ease"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.backgroundColor = "#d32f2f";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0)";
-              e.target.style.backgroundColor = "#ef5350";
-            }}
-          >
-            🗑️ Cancella lista
-          </button>
+              <button 
+                onClick={clearShoppingList} 
+                style={{ 
+                  width: "100%",
+                  padding: "14px 20px", 
+                  backgroundColor: "#ef5350", 
+                  color: "white", 
+                  border: "none", 
+                  borderRadius: "12px", 
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "clamp(14px, 3.5vw, 16px)",
+                  boxShadow: "0 4px 12px rgba(239, 83, 80, 0.3)",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#d32f2f";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#ef5350";
+                }}
+              >
+                🗑️ Cancella lista
+              </button>
+            </>
+          )}
         </div>
 
         {/* Lista della spesa - Card style migliorata */}
         {shoppingList.length > 0 && (
           <div style={{ 
             backgroundColor: "white", 
-            padding: "30px", 
+            padding: "20px", 
             borderRadius: "16px", 
-            maxWidth: "600px", 
             margin: "0 auto", 
             boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
           }}>
             <h3 style={{ 
               marginTop: 0, 
-              marginBottom: "25px", 
+              marginBottom: "20px", 
               textAlign: "center",
-              fontSize: "24px",
+              fontSize: "clamp(20px, 5vw, 24px)",
               color: "#2e7d32",
               fontWeight: "700"
             }}>
@@ -645,29 +650,28 @@ function App() {
             </h3>
             <div style={{ 
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: "12px"
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+              gap: "10px"
             }}>
               {shoppingList.map((item, i) => (
                 <div
                   key={i}
                   style={{ 
-                    padding: "12px 16px",
+                    padding: "10px 14px",
                     backgroundColor: "#f1f8f4",
                     borderRadius: "10px",
-                    fontSize: "15px",
+                    fontSize: "clamp(13px, 3vw, 15px)",
                     color: "#2e7d32",
                     fontWeight: "500",
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                    transition: "all 0.2s ease"
+                    transition: "all 0.2s ease",
+                    wordBreak: "break-word"
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#e8f5e9";
-                    e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = "#f1f8f4";
-                    e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
                   • {item}
