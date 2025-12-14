@@ -1,19 +1,19 @@
+// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
+// Config Firebase reale
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBcICNy1K_3cC0KXqdMv1L3c4ual4qArM0",
+  authDomain: "mealplanner-36e6c.firebaseapp.com",
+  projectId: "mealplanner-36e6c",
+  storageBucket: "mealplanner-36e6c.firebasestorage.app",
+  messagingSenderId: "358262517866",
+  appId: "1:358262517866:web:aa717cd1f3a33c09499a13"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const provider = new GoogleAuthProvider();
+// Inizializza Firebase
+export const app = initializeApp(firebaseConfig);
 
-// Funzioni per login e logout
-export const loginWithGoogle = () => signInWithPopup(auth, provider);
-export const logout = () => signOut(auth);
+// Esporta Firestore
+export const db = getFirestore(app);
