@@ -1,7 +1,9 @@
+// src/App.jsx
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
+import { collection, addDoc, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, loginWithGoogle, logout } from "./firebaseAuth";
-import { collection, addDoc, onSnapshot, doc, setDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -12,61 +14,54 @@ function App() {
   const days = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
   const meals = ["pranzo","cena"];
 
-  // Controllo stato utente
+  // Listener stato utente
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
+    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
+    return unsubscribe;
   }, []);
 
-  // Aggiorna le ricette in tempo reale da Firestore (globali)
+  // Aggiorna ricette in tempo reale
   useEffect(() => {
+    if (!user) return;
     const recipesCollection = collection(db, "recipes");
     const unsubscribe = onSnapshot(recipesCollection, snapshot => {
       const recs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRecipes(recs);
     });
     return unsubscribe;
-  }, []);
+  }, [user]);
 
-  // Documento piano condiviso
-  const mealPlanDocRef = doc(db, "sharedMealPlans", "default");
-
-  // Carica piano condiviso in tempo reale
+  // Recupera piano condiviso
   useEffect(() => {
-    const unsubscribe = onSnapshot(mealPlanDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setMealPlan(docSnap.data());
-      } else {
-        setMealPlan({});
+    if (!user) return;
+    const planDoc = doc(db, "mealPlans", "sharedPlan"); // documento condiviso
+    getDoc(planDoc).then(snapshot => {
+      if (snapshot.exists()) {
+        setMealPlan(snapshot.data());
       }
     });
-    return unsubscribe;
-  }, []);
+  }, [user]);
 
-  // Salva piano condiviso
-  const saveMealPlan = async (newPlan) => {
-    await setDoc(mealPlanDocRef, newPlan);
-  };
-
-  // Aggiungi una nuova ricetta globale
+  // Aggiungi nuova ricetta
   const addRecipe = async (name, ingredients) => {
+    if (!user) return;
     const recipesCollection = collection(db, "recipes");
     await addDoc(recipesCollection, { name, ingredients });
   };
 
-  // Aggiorna il piano settimanale condiviso
+  // Aggiorna piano settimanale e salva
   const handleChange = (day, meal, recipeId) => {
-    const newPlan = {
+    const updatedPlan = {
       ...mealPlan,
       [day]: { ...mealPlan[day], [meal]: recipeId }
     };
-    setMealPlan(newPlan);
-    saveMealPlan(newPlan);
+    setMealPlan(updatedPlan);
+
+    const planDoc = doc(db, "mealPlans", "sharedPlan");
+    setDoc(planDoc, updatedPlan);
   };
 
-  // Genera lista della spesa personale dal piano
+  // Genera lista della spesa
   const generateShoppingList = () => {
     const list = new Set();
     for (const day of days) {
@@ -83,8 +78,8 @@ function App() {
 
   if (!user) {
     return (
-      <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif", display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <button onClick={loginWithGoogle} style={{ padding: "10px 20px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "18px" }}>
+      <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#D1E6DB" }}>
+        <button onClick={loginWithGoogle} style={{ padding: "15px 30px", fontSize: "18px", cursor: "pointer", borderRadius: "6px", border: "none", backgroundColor: "#2e7d32", color: "white" }}>
           Login con Google
         </button>
       </div>
@@ -93,13 +88,15 @@ function App() {
 
   return (
     <div style={{ backgroundColor: "#D1E6DB", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center", fontSize: "36px", marginBottom: "20px" }}>Meal Planner</h1>
       <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
-
-        {/* Logout */}
-        <div style={{ textAlign: "right", marginBottom: "10px" }}>
-          <span style={{ marginRight: "10px" }}>Benvenuto, {user.displayName}</span>
-          <button onClick={logout} style={{ padding: "6px 12px", backgroundColor: "#a12828", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Logout</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 style={{ fontSize: "36px" }}>Meal Planner</h1>
+          <div>
+            <span style={{ marginRight: "10px" }}>Ciao, {user.displayName}</span>
+            <button onClick={logout} style={{ padding: "8px 16px", backgroundColor: "#a12828", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Form aggiungi ricetta */}
@@ -165,7 +162,6 @@ function App() {
             {shoppingList.map((item, i) => <li key={i} style={{ padding: "5px 0", borderBottom: "1px solid #eee" }}>{item}</li>)}
           </ul>
         )}
-
       </div>
     </div>
   );
